@@ -39,6 +39,8 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 .exp{margin-top:12px;padding:12px 14px;border-left:4px solid var(--ok);background:var(--okbg);border-radius:0 8px 8px 0;max-width:75ch}
 .exp b{display:block;margin-bottom:4px}
 .flag{all:unset;cursor:pointer;color:var(--mute);font-size:14px}.flag[aria-pressed=true]{color:var(--accent);font-weight:700}
+.flag:hover{color:var(--accent);text-decoration:underline}
+.acts{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .empty,.note{padding:16px;border:1px dashed var(--line);border-radius:10px;color:var(--mute)}
 .note{background:var(--note);color:var(--ink);border-style:solid;margin-bottom:16px;font-size:14px}
 .tools{margin-top:28px}.tools summary{cursor:pointer;font-weight:500}
@@ -97,6 +99,16 @@ function load(){try{var d=JSON.parse(localStorage.getItem("mdsPyq")||"{}");S.ans
 function save(){try{localStorage.setItem("mdsPyq",JSON.stringify({ans:S.ans,mark:S.mark,extra:S.extra,perm:S.perm}))}catch(e){}}
 function shuffled(n){var a=[],i,j,k,t;for(i=0;i<n;i++)a.push(i);for(j=n-1;j>0;j--){k=Math.floor(Math.random()*(j+1));t=a[j];a[j]=a[k];a[k]=t}return a}
 function optsOf(q){var p=S.perm[q.id];if(!p||p.length!==q.opts.length)p=q.opts.map(function(_,i){return i});return{o:p.map(function(i){return q.opts[i]}),a:p.indexOf(q.ans)}}
+function byId(id){return all().filter(function(q){return q.id===id})[0]}
+function googleUrl(q){return"https://www.google.com/search?q="+encodeURIComponent(q.q+" NEET MDS")}
+function issueUrl(q,guess){
+  var v=optsOf(q),letters="ABCDEFGH";
+  var body="**Subject:** "+q.subject+"\n**Year:** "+q.year+"\n**Question ID:** "+q.id+"\n\n**Question:** "+q.q+"\n\n**Options as shown:**\n"+
+    v.o.map(function(x,i){return"- "+letters.charAt(i)+") "+x+(i===v.a?"  (marked correct in the app)":"")}).join("\n")+
+    "\n\n**Correct answer (please fill this in):**\n"+(guess.trim()||"_not given_")+
+    "\n\n**Why / source:**\n";
+  return"https://github.com/lms-guides/NEET_MDS_PYQs/issues/new?title="+encodeURIComponent("Wrong answer: "+q.q.slice(0,80).trim())+"&body="+encodeURIComponent(body);
+}
 function all(){return SAMPLE.concat(S.extra)}
 function $(i){return document.getElementById(i)}
 function esc(t){var d=document.createElement("div");d.textContent=t==null?"":String(t);return d.innerHTML}
@@ -133,7 +145,7 @@ function renderList(){
       var cls="opt";if(show){if(i===v.a)cls+=" ok";else if(i===picked)cls+=" bad"}
       return'<button class="'+cls+'" data-q="'+esc(q.id)+'" data-i="'+i+'"'+(show?" disabled":"")+'><i>'+"ABCDEFGH".charAt(i)+'</i><span>'+esc(x)+'</span></button>'}).join("");
     var w=show&&q.warn?'<div class="exp" style="border-color:var(--bad);background:var(--badbg)"><b>Check the key</b>'+esc(q.warn.replace(/^Check the key: /,''))+'</div>':'';var e=show?'<div class="exp"><b>Correct answer: '+"ABCDEFGH".charAt(v.a)+'. '+esc(v.o[v.a])+'</b>'+esc(q.exp||"The source gives no explanation for this question.")+'</div>'+w:"";
-    return'<article class="q"><div class="meta"><span>'+esc(q.subject)+' · '+esc(q.year)+'</span><button class="flag" data-m="'+esc(q.id)+'" aria-pressed="'+(!!S.mark[q.id])+'">'+(S.mark[q.id]?"Bookmarked":"Bookmark")+'</button></div><p class="qt">'+esc(q.q)+'</p>'+o+e+'</article>'}).join("");
+    return'<article class="q"><div class="meta"><span>'+esc(q.subject)+' · '+esc(q.year)+'</span><span class="acts"><a class="flag" href="'+googleUrl(q)+'" target="_blank" rel="noopener">Refer online</a><button class="flag" data-r="'+esc(q.id)+'">Report</button><button class="flag" data-m="'+esc(q.id)+'" aria-pressed="'+(!!S.mark[q.id])+'">'+(S.mark[q.id]?"Bookmarked":"Bookmark")+'</button></span></div><p class="qt">'+esc(q.q)+'</p>'+o+e+'</article>'}).join("");
 }
 function render(){renderNav();renderYears();renderResetSubj();renderStats();renderList()}
 document.addEventListener("click",function(ev){
@@ -141,6 +153,12 @@ document.addEventListener("click",function(ev){
   if(b.dataset.s){S.subj=b.dataset.s;render()}
   else if(b.dataset.q){S.ans[b.dataset.q]=+b.dataset.i;save();renderStats();renderNav();renderList()}
   else if(b.dataset.m){S.mark[b.dataset.m]=!S.mark[b.dataset.m];save();renderList()}
+  else if(b.dataset.r){
+    var q=byId(b.dataset.r);if(!q)return;
+    var guess=prompt("Report this question\n\n"+q.q+"\n\nWhat do you think the correct answer is? (optional)","");
+    if(guess===null)return;
+    window.open(issueUrl(q,guess),"_blank","noopener");
+  }
 });
 function setMode(m){S.mode=m;$("mPractice").setAttribute("aria-pressed",m==="practice");$("mReview").setAttribute("aria-pressed",m==="review");renderList()}
 $("mPractice").onclick=function(){setMode("practice")};$("mReview").onclick=function(){setMode("review")};
