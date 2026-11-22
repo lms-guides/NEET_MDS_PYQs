@@ -40,12 +40,7 @@
     <button class="x" id="bClose" aria-label="Close menu">✕</button>
   </div>
   <div class="drawer-body">
-    <p>Paste a JSON list. <code>ans</code> is the correct option number starting at 0.</p>
-    <pre>[{"subject":"Oral Pathology","year":2023,"q":"Question text","opts":["A","B","C","D"],"ans":1,"exp":"Why B is correct"}]</pre>
-    <textarea id="imp" aria-label="Questions JSON"></textarea>
-    <button class="btn" id="bImp">Import questions</button>
-    <button class="btn alt" id="bExp">Export all as JSON</button>
-    <button class="btn alt" id="bRes">Reset my progress</button>
+    <button class="btn warn" id="bRes">Reset my progress</button>
     <h3>Reset one subject</h3>
     <p>Clears your attempts and bookmarks for that subject, then gives its options a fresh random order.</p>
     <div class="row">
@@ -53,6 +48,19 @@
       <button class="btn" id="bResSubj">Reset subject &amp; shuffle options</button>
     </div>
     <p id="msg" role="status"></p>
+    <details class="grp" id="gImp">
+      <summary>Import questions</summary>
+      <p>Paste a JSON list. <code>ans</code> is the correct option number starting at 0.</p>
+      <pre>[{"subject":"Oral Pathology","year":2023,"q":"Question text","opts":["A","B","C","D"],"ans":1,"exp":"Why B is correct"}]</pre>
+      <textarea id="imp" aria-label="Questions JSON"></textarea>
+      <button class="btn" id="bImp">Import questions</button>
+    </details>
+    <details class="grp" id="gExp">
+      <summary>Export questions</summary>
+      <p>Shows the questions you imported as JSON so you can copy them out.</p>
+      <button class="btn alt" id="bExp">Export all as JSON</button>
+      <textarea id="exp" aria-label="Exported JSON" readonly></textarea>
+    </details>
   </div>
 </aside>
 <div class="scrim" id="scrimS"></div>

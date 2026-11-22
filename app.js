@@ -17,10 +17,14 @@ function all(){return SAMPLE.concat(S.extra)}
 function $(i){return document.getElementById(i)}
 function esc(t){var d=document.createElement("div");d.textContent=t==null?"":String(t);return d.innerHTML}
 function subjectsList(){var s=SUBJECTS.slice();all().forEach(function(q){if(s.indexOf(q.subject)<0)s.push(q.subject)});return s}
+function subjStat(list){
+  var a=0,c=0;list.forEach(function(q){var p=S.ans[q.id];if(p!=null){a++;if(p===optsOf(q).a)c++}});
+  return a+"/"+list.length+" · "+(a?Math.round(c*100/a)+"%":"–");
+}
 function renderNav(){
-  var qs=all(),h='<button aria-current="'+(S.subj==="All")+'" data-s="All">All subjects <small>'+qs.length+'</small></button>';
-  subjectsList().forEach(function(s){var n=qs.filter(function(q){return q.subject===s}).length;
-    h+='<button aria-current="'+(S.subj===s)+'" data-s="'+esc(s)+'">'+esc(s)+' <small>'+n+'</small></button>'});
+  var qs=all(),h='<button aria-current="'+(S.subj==="All")+'" data-s="All" title="attempted / total · accuracy">All subjects <small>'+subjStat(qs)+'</small></button>';
+  subjectsList().forEach(function(s){var sub=qs.filter(function(q){return q.subject===s});
+    h+='<button aria-current="'+(S.subj===s)+'" data-s="'+esc(s)+'" title="attempted / total · accuracy">'+esc(s)+' <small>'+subjStat(sub)+'</small></button>'});
   $("subjects").innerHTML=h;$("subjList").innerHTML=h;
   $("subjBtnLabel").textContent=S.subj==="All"?"All subjects":S.subj;
 }
@@ -40,7 +44,7 @@ function renderStats(){
   $("stats").innerHTML='<div><b>'+a+'/'+qs.length+'</b>attempted</div><div><b>'+(a?Math.round(c*100/a)+'%':'–')+'</b>accuracy</div>';
 }
 function card(q){
-    var picked=S.ans[q.id],show=S.mode==="review"||picked!=null,v=optsOf(q);
+    var picked=S.ans[q.id],show=picked!=null,v=optsOf(q);
     var o=v.o.map(function(x,i){
       var cls="opt";if(show){if(i===v.a)cls+=" ok";else if(i===picked)cls+=" bad"}
       return'<button class="'+cls+'" data-q="'+esc(q.id)+'" data-i="'+i+'"'+(show?" disabled":"")+'><i>'+"ABCDEFGH".charAt(i)+'</i><span>'+esc(x)+'</span></button>'}).join("");
@@ -52,14 +56,14 @@ function refreshCard(id){
   if(el&&q)el.outerHTML=card(q);
 }
 function afterChange(id){
-  if($("fNew").checked||$("fMark").checked)renderList();else refreshCard(id);
-  renderStats();
+  if(S.mode==="review"||$("fNew").checked||$("fMark").checked)renderList();else refreshCard(id);
+  renderStats();renderNav();
 }
 function renderList(){
   var t=$("search").value.toLowerCase(),y=$("year").value||"All",m=$("fMark").checked,n=$("fNew").checked;
   var qs=all().filter(function(q){
-    return (S.subj==="All"||q.subject===S.subj)&&(y==="All"||String(q.year)===y)&&(!t||q.q.toLowerCase().indexOf(t)>=0||q.opts.some(function(o){return String(o).toLowerCase().indexOf(t)>=0}))&&(!m||S.mark[q.id])&&(!n||S.ans[q.id]==null)});
-  if(!qs.length){$("list").innerHTML='<div class="empty">No questions match these filters. Clear a filter or import more questions below.</div>';return}
+    return (S.subj==="All"||q.subject===S.subj)&&(y==="All"||String(q.year)===y)&&(!t||q.q.toLowerCase().indexOf(t)>=0||q.opts.some(function(o){return String(o).toLowerCase().indexOf(t)>=0}))&&(!m||S.mark[q.id])&&(!n||S.ans[q.id]==null)&&(S.mode!=="review"||S.ans[q.id]!=null)});
+  if(!qs.length){$("list").innerHTML='<div class="empty">'+(S.mode==="review"?"No attempted questions match these filters. Answer some questions in Practice mode, then come back to review them.":"No questions match these filters. Clear a filter or import more questions below.")+'</div>';return}
   $("list").innerHTML=qs.map(card).join("");
 }
 function render(){renderNav();renderYears();renderResetSubj();renderStats();renderList()}
@@ -87,7 +91,11 @@ $("bImp").onclick=function(){
     save();render();$("imp").value="";$("msg").textContent=n+" question(s) imported."+(n<a.length?" "+(a.length-n)+" skipped because a field was missing or ans was out of range.":"");
   }catch(e){$("msg").textContent="That is not a valid JSON list. Check the format shown above."}
 };
-$("bExp").onclick=function(){$("imp").value=JSON.stringify(S.extra,null,1);$("msg").textContent="Your imported questions are in the box above. Copy them to keep a backup."};
+$("bExp").onclick=function(){
+  $("exp").value=JSON.stringify(S.extra,null,1);
+  $("gExp").open=true;$("exp").focus();$("exp").select();
+  $("msg").textContent=S.extra.length?"Your imported questions are in the box above. Copy them to keep a backup.":"You have no imported questions to export.";
+};
 $("bRes").onclick=function(){if(confirm("Clear all attempts and bookmarks?")){S.ans={};S.mark={};save();render()}};
 $("bResSubj").onclick=function(){
   var s=$("resSubj").value;if(!s)return;
