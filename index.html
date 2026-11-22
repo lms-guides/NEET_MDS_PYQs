@@ -73,6 +73,20 @@
     <nav id="subjList" aria-label="Subjects"></nav>
   </div>
 </aside>
+<div class="scrim" id="scrimR"></div>
+<div class="modal" id="report" role="dialog" aria-modal="true" aria-labelledby="repT" aria-hidden="true" inert>
+  <div class="drawer-head">
+    <h2 id="repT">Report this question</h2>
+    <button class="x" id="bCloseR" aria-label="Close report">✕</button>
+  </div>
+  <div class="drawer-body">
+    <p id="repQ"></p>
+    <label class="fld" for="repAns">What do you think the correct answer is? (optional)</label>
+    <input id="repAns" type="text" placeholder="e.g. C) Erythroplakia">
+    <a class="btn" id="repGo" href="https://github.com/lms-guides/NEET_MDS_PYQs/issues/new" target="_blank" rel="noopener">Open GitHub issue</a>
+    <p>GitHub opens with the question and your answer filled in. If it asks you to sign in, sign in and the report form comes straight back. Never reported on GitHub before? You need a free GitHub account.</p>
+  </div>
+</div>
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>

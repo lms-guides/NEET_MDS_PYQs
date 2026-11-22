@@ -72,12 +72,7 @@ document.addEventListener("click",function(ev){
   if(b.dataset.s){S.subj=b.dataset.s;render();if($("subjDrawer").classList.contains("on"))setSubjMenu(false)}
   else if(b.dataset.q){S.ans[b.dataset.q]=+b.dataset.i;save();afterChange(b.dataset.q)}
   else if(b.dataset.m){S.mark[b.dataset.m]=!S.mark[b.dataset.m];save();afterChange(b.dataset.m)}
-  else if(b.dataset.r){
-    var q=byId(b.dataset.r);if(!q)return;
-    var guess=prompt("Report this question\n\n"+q.q+"\n\nWhat do you think the correct answer is? (optional)","");
-    if(guess===null)return;
-    window.open(issueUrl(q,guess),"_blank","noopener");
-  }
+  else if(b.dataset.r)openReport(b.dataset.r,b);
 });
 function setMode(m){S.mode=m;$("mPractice").setAttribute("aria-pressed",m==="practice");$("mReview").setAttribute("aria-pressed",m==="review");renderList()}
 $("mPractice").onclick=function(){setMode("practice")};$("mReview").onclick=function(){setMode("review")};
@@ -103,7 +98,7 @@ $("bResSubj").onclick=function(){
   var n=0;all().forEach(function(q){if(q.subject!==s)return;delete S.ans[q.id];delete S.mark[q.id];S.perm[q.id]=shuffled(q.opts.length);n++});
   save();render();$("msg").textContent=n+" question(s) in "+s+" reset; their options are in a new random order.";
 };
-function lockScroll(){document.body.classList.toggle("no-scroll",$("drawer").classList.contains("on")||$("subjDrawer").classList.contains("on"))}
+function lockScroll(){document.body.classList.toggle("no-scroll",$("drawer").classList.contains("on")||$("subjDrawer").classList.contains("on")||$("report").classList.contains("on"))}
 function panel(drawerId,scrimId,btnId,closeId,open){
   var d=$(drawerId),sc=$(scrimId),b=$(btnId);
   d.classList.toggle("on",open);sc.classList.toggle("on",open);
@@ -116,12 +111,35 @@ function setSubjMenu(open){panel("subjDrawer","scrimS","bSubj","bCloseS",open)}
 $("bMenu").onclick=function(){setMenu(true)};
 $("bClose").onclick=function(){setMenu(false)};
 $("scrim").onclick=function(){setMenu(false)};
+var repId=null,repBtn=null;
+function openReport(id,btn){
+  var q=byId(id);if(!q)return;
+  repId=id;repBtn=btn||null;
+  $("repQ").textContent=q.q;
+  $("repAns").value="";
+  $("repGo").href=issueUrl(q,"");
+  setReport(true);
+  $("repAns").focus();
+}
+function setReport(open){
+  var m=$("report"),sc=$("scrimR");
+  m.classList.toggle("on",open);sc.classList.toggle("on",open);
+  m.setAttribute("aria-hidden",open?"false":"true");m.inert=!open;
+  lockScroll();
+  if(!open){if(repBtn)repBtn.focus();repBtn=null}
+}
+$("repAns").addEventListener("input",function(){
+  var q=byId(repId);if(q)$("repGo").href=issueUrl(q,$("repAns").value);
+});
+$("bCloseR").onclick=function(){setReport(false)};
+$("scrimR").onclick=function(){setReport(false)};
 $("bSubj").onclick=function(){setSubjMenu(true)};
 $("bCloseS").onclick=function(){setSubjMenu(false)};
 $("scrimS").onclick=function(){setSubjMenu(false)};
 document.addEventListener("keydown",function(e){
   if(e.key!=="Escape")return;
-  if($("drawer").classList.contains("on"))setMenu(false);
+  if($("report").classList.contains("on"))setReport(false);
+  else if($("drawer").classList.contains("on"))setMenu(false);
   else if($("subjDrawer").classList.contains("on"))setSubjMenu(false);
 });
 load();render();
